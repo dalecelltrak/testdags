@@ -51,7 +51,7 @@ def upload_to_snowflake():
 
 
 # Using the context manager alllows you not to duplicate the dag parameter in each operator
-with DAG('S3_dag_test', default_args=default_args, schedule_interval='@once') as dag:
+with DAG('S3_dag_test_v3', default_args=default_args, schedule_interval='@once') as dag:
 
     start_task = DummyOperator(
             task_id='dummy_start'
