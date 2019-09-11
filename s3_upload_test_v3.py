@@ -1,4 +1,3 @@
-
 from airflow import DAG
 from airflow.operators import DummyOperator, PythonOperator
 from datetime import datetime, timedelta
@@ -16,14 +15,14 @@ file = 'test.csv'
 default_args = {
     'owner': 'dale',
     #'start_date': datetime.now(),
-	'start_date': datetime(2019, 9, 1),
+    'start_date': datetime(2019, 9, 1),
     'retry_delay': timedelta(minutes=.5)
 }
 
 def upload_file_to_S3_with_hook(filename, key, bucket_name):
     hook = airflow.hooks.S3_hook.S3Hook('aws_s3_test_bucket')
     #hook.load_file_obj(mysql_tbl, key, bucket_name, replace=False, encrypt=False):
-	hook.load_file(filename, key, bucket_name)
+    hook.load_file(filename, key, bucket_name)
 
 snowflake_username = sfhk.SnowflakeHook('snowflake')._get_conn_params()['user']
 snowflake_password = sfhk.SnowflakeHook('snowflake')._get_conn_params()['password']
@@ -33,20 +32,20 @@ snowflake_schema = sfhk.SnowflakeHook('snowflake')._get_conn_params()['schema']
 
 
 def upload_to_snowflake():
-	con = snowflake.connector.connect(user = snowflake_username, password = snowflake_password, account = snowflake_account, warehouse=snowflake_warehouse, database=database_name, schema=snowflake_schema)
-	cs = con.cursor()
-	 
-	copy = (" copy into %s from '@%s/%s'"
-		" file_format = (type = csv field_delimiter = ','"
-		#" field_optionally_enclosed_by = '\"'"
-		" skip_header = 0)"
-		#" on_error = 'continue'
-		";"
-		% (table_name, sfstage, file)
+    con = snowflake.connector.connect(user = snowflake_username, password = snowflake_password, account = snowflake_account, warehouse=snowflake_warehouse, database=database_name, schema=snowflake_schema)
+    cs = con.cursor()
+     
+    copy = (" copy into %s from '@%s/%s'"
+        " file_format = (type = csv field_delimiter = ','"
+        #" field_optionally_enclosed_by = '\"'"
+        " skip_header = 0)"
+        #" on_error = 'continue'
+        ";"
+        % (table_name, sfstage, file)
     )
-	 
-	cs.execute(copy)
-	cs.close()
+     
+    cs.execute(copy)
+    cs.close()
 
 
 
@@ -58,14 +57,14 @@ with DAG('S3_dag_test_v3', default_args=default_args, schedule_interval='@once')
     )
 
     upload_to_S3_task = PythonOperator(
-		task_id='upload_to_S3',
-		python_callable=upload_file_to_S3_with_hook,
-		op_kwargs={
-			'filename': '/usr/local/file-to-watch-1.csv',
-			'key': 'test.csv',
-			'bucket_name': 'celltrak-test-arflow1',
-		},
-		dag=dag)
+        task_id='upload_to_S3',
+        python_callable=upload_file_to_S3_with_hook,
+        op_kwargs={
+            'filename': '/usr/local/file-to-watch-1.csv',
+            'key': 'test.csv',
+            'bucket_name': 'celltrak-test-arflow1',
+        },
+        dag=dag)
 
     upload_file = PythonOperator(
         task_id='upload_to_snowflake_task',
@@ -78,8 +77,6 @@ with DAG('S3_dag_test_v3', default_args=default_args, schedule_interval='@once')
 
 # Use arrows to set dependencies between tasks
 start_task >> upload_to_S3_task >> upload_file
-
-
 
 
 
